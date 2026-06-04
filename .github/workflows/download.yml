@@ -1,0 +1,28 @@
+name: Download Windows LangChain Dependencies
+
+on:
+  workflow_dispatch: # 允许手动触发
+
+jobs:
+  download-windows-deps:
+    runs-on: windows-latest # 使用 GitHub 提供的 Windows x86_64 服务器
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12' # 匹配你的 Win10 环境
+
+      - name: Download Dependencies
+        run: |
+          mkdir pkgs
+          # 在真正的 Windows 环境下下载，自动获取兼容 Python 3.12 的包
+          pip download langchain langchain-community langchain-core -d ./pkgs
+          
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: win10-langchain-pkgs
+          path: pkgs/
