@@ -1,11 +1,11 @@
-name: Download Windows LangChain Dependencies
+name: Download RAG Dependencies for Win10
 
 on:
-  workflow_dispatch: # 允许手动触发
+  workflow_dispatch:
 
 jobs:
-  download-windows-deps:
-    runs-on: windows-latest # 使用 GitHub 提供的 Windows x86_64 服务器
+  download-rag-deps:
+    runs-on: windows-latest
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -13,16 +13,30 @@ jobs:
       - name: Set up Python 3.12
         uses: actions/setup-python@v5
         with:
-          python-version: '3.12' # 匹配你的 Win10 环境
+          python-version: '3.12' # 匹配你的离线 Win10 环境
 
-      - name: Download Dependencies
+      - name: Download RAG Dependencies
         run: |
           mkdir pkgs
-          # 在真正的 Windows 环境下下载，自动获取兼容 Python 3.12 的包
-          pip download langchain langchain-community langchain-core -d ./pkgs
+          # 1. 核心框架
+          pip download langchain langchain-community langchain-core langchain-ollama -d ./pkgs
+          # 2. 文档解析 (Word, PDF, Excel, CSV, 图片OCR)
+          pip download pandas openpyxl pypdf PyMuPDF docx2txt Pillow rapidocr-onnxruntime -d ./pkgs
+          # 3. 向量数据库与分词器
+          pip download faiss-cpu tiktoken -d ./pkgs
           
+      - name: Verify Packages
+        run: |
+          if not exist pkgs\*.whl (
+            echo ERROR: No .whl files found!
+            exit 1
+          )
+          dir /b pkgs\*.whl | find /c /v "" > count.txt
+          set /p number=<count.txt
+          echo Total packages downloaded: %number%
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: win10-langchain-pkgs
+          name: win10-rag-pkgs
           path: pkgs/
